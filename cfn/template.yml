@@ -1,0 +1,70 @@
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    MemorySize: 512
+    Runtime: nodejs18.x
+    Handler: bot.handler
+    Environment:
+      Variables:
+        SLACK_TOKEN: !Ref SlackToken
+        OPENAI_API_KEY: !Ref OpenAIToken
+        OPENAI_MODEL: !Ref OpenAIModel
+        # NODE_OPTIONS: --enable-source-maps
+    Tags:
+      Project: !Ref Project
+      Environment: !Ref Environment
+
+Description: SlackGPT
+
+# Metadata:
+#   template metadata
+
+Parameters:
+  Project:
+    Type: String
+    Default: SlackGPT
+
+  Environment:
+    Type: String
+    Default: dev
+
+  SlackToken:
+    Type: String
+
+  OpenAIToken:
+    Type: String
+
+  OpenAIModel:
+    Type: String
+    Default: text-davinci-003
+
+# Mappings:
+#   set of mappings
+
+# Conditions:
+#   set of conditions
+
+Resources:
+
+  SlackGPT:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}
+      Timeout: 30
+      CodeUri: src/
+    Metadata:
+      BuildMethod: esbuild
+
+  SlackGPTLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SlackGPT}
+      RetentionInDays: 14
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Environment
+          Value: !Ref Environment
+
+# Outputs:
