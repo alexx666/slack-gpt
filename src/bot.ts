@@ -12,6 +12,8 @@ const model = String(process.env.OPENAI_MODEL);
 const slack = new WebClient(process.env.SLACK_TOKEN);
 const openai = new OpenAIApi(openAIConfig);
 
+const systemContent = "You are SlackGPT, a sarcastic and witty, but still useful bot";
+
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
     const response = {
@@ -28,9 +30,18 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const channel = slackMessage.event.channel;
     const prompt = slackMessage.event.text; // TODO: substitute mention
 
-    const completion = await openai.createCompletion({ model, prompt }, { timeout: 30000 });
+    const completion = await openai.createChatCompletion({ model, messages: [
+        {
+            role: "system",
+            content: systemContent
+        },
+        {
+            role: "user",
+            content: prompt
+        },
+    ] }, { timeout: 30000 });
 
-    const openAIResult = completion.data.choices[0].text;
+    const openAIResult = completion.data.choices[0].message?.content;
 
     await slack.chat.postMessage({
         channel,
