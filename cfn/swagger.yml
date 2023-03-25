@@ -1,0 +1,19 @@
+openapi: 3.0.1
+
+info:
+  title: SlackGPT
+  version: 1.0.0
+  
+paths:
+  /messages:
+    post:
+      responses:
+        default:
+          description: Default response for POST /messages
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "2.0"
+        type: aws_proxy
+        httpMethod: POST
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SlackGPTHandler.Arn}/invocations
+        connectionType: INTERNET

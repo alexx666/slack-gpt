@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "start": "node dist/main"
+    "build": "sam build -t cfn/template.yml -s . --beta-features",
+    "deploy": "sam deploy -g --config-env dev"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +14,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.114",
     "aws-lambda": "^1.0.7",
+    "aws-sdk": "^2.1343.0",
     "esbuild": "^0.17.12",
     "typescript": "^5.0.2"
   },

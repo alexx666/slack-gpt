@@ -1,15 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
 Transform: AWS::Serverless-2016-10-31
 
 Globals:
   Function:
-    MemorySize: 512
+    MemorySize: 2048
     Runtime: nodejs18.x
-    Handler: bot.handler
+    Handler: index.handler
     Environment:
       Variables:
         SLACK_TOKEN: !Ref SlackToken
         OPENAI_API_KEY: !Ref OpenAIToken
         OPENAI_MODEL: !Ref OpenAIModel
+        OPENAI_SYSTEM_CONTENT: !Ref OpenAISystemContent
+        DYNAMO_REQUEST_CACHE_TABLE: !Ref RequestCache
         # NODE_OPTIONS: --enable-source-maps
     Tags:
       Project: !Ref Project
@@ -37,7 +41,15 @@ Parameters:
 
   OpenAIModel:
     Type: String
-    Default: text-davinci-003
+    Default: gpt-3.5-turbo
+
+  OpenAISystemContent:
+    Type: String
+    Default: You are SlackGPT, a sarcastic and witty, but still useful bot
+
+  Version:
+    Type: String
+    Default: v1
 
 # Mappings:
 #   set of mappings
@@ -47,19 +59,61 @@ Parameters:
 
 Resources:
 
-  SlackGPT:
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ./swagger.yml
+      DisableExecuteApiEndpoint: false
+      FailOnWarnings: false
+      StageName: !Ref Version
+      Tags:
+        Project: !Ref Project
+        Environment: !Ref Environment
+
+  RequestCache:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: requestId
+        Type: String  
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      SSESpecification:
+        SSEEnabled: true
+      TableName: !Sub ${AWS::StackName}-cache
+      Tags:
+        Project: !Ref Project
+        Environment: !Ref Environment
+
+  SlackGPTHandler:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AWS::StackName}
+      FunctionName: !Sub ${AWS::StackName}-handler
       Timeout: 30
       CodeUri: src/
+      Policies:
+        - AmazonDynamoDBFullAccess
     Metadata:
       BuildMethod: esbuild
+    Events:
+      PostMessages:
+        Type: HttpApi
+        Properties:
+          ApiId: !Ref Api
+          Path: /messages
+          Method: POST
+          PayloadFormatVersion: "2.0"
+          TimeoutInMillis: 29000
 
-  SlackGPTLogGroup:
+  SlackGPTHandlerLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/lambda/${SlackGPT}
+      LogGroupName: !Sub /aws/lambda/${SlackGPTHandler}
       RetentionInDays: 14
       Tags:
         - Key: Project
@@ -67,4 +121,7 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-# Outputs:
+Outputs:
+  ClikcableAPIUrl:
+    Description: API url
+    Value: !Sub https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${Version}
