@@ -84,14 +84,14 @@ async function handleRequest(slackMessage: any) {
 
     if (cached) return;
 
+    await cacheRequest(requestId);
+
     const channel = slackMessage.event.channel;
     const prompt = slackMessage.event.text;
 
     const openAIResult = await postChatGPTMessage(prompt);
 
     await postSlackMessage(channel, openAIResult);
-
-    await cacheRequest(requestId);
 }
 
 // Lambda Controller
