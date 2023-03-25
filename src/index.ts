@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDB } from "aws-sdk";
-import { Configuration, OpenAIApi } from "openai";
+import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 import { WebClient } from "@slack/web-api";
 
 const requestCache = new DynamoDB.DocumentClient();
@@ -32,7 +32,7 @@ function hashRequestBody(body: any): string {
 
 /* Integrations */
 
-async function postChatGPTMessage(prompt: string): Promise<string | undefined> {
+async function sendChatGPTRequest(prompts: ChatCompletionRequestMessage[]): Promise<string | undefined> {
     console.debug("Sending message to ChatGPT...")
     const completion = await openai.createChatCompletion({
         model, messages: [
@@ -40,14 +40,30 @@ async function postChatGPTMessage(prompt: string): Promise<string | undefined> {
                 role: "system",
                 content: systemContent
             },
-            {
-                role: "user",
-                content: prompt
-            },
+            ...prompts,
         ]
     }, { timeout: 30000 });
 
     return completion.data.choices[0].message?.content;
+}
+
+async function getChatHistory(channel: string): Promise<ChatCompletionRequestMessage[]> {
+    console.debug("Fetching bot info and chat history...");
+    
+    const botInfo = await slack.bots.info();
+
+    // gets only latest
+    const history = await slack.conversations.history({ channel });
+
+    const sortedMessages = (history.messages ?? []).sort((m1, m2) => Number(m1.ts) - Number(m2.ts));
+
+    // Maps to gpt message format
+    const messages: ChatCompletionRequestMessage[] = sortedMessages.map(msg => ({
+        role: msg.bot_id === botInfo.bot?.id ? "assistant" : "user",
+        content: String(msg.text)
+    }));
+
+    return messages;
 }
 
 async function postSlackMessage(channel: string, text: string | undefined) {
@@ -87,9 +103,9 @@ async function handleRequest(slackMessage: any) {
     await cacheRequest(requestId);
 
     const channel = slackMessage.event.channel;
-    const prompt = slackMessage.event.text;
 
-    const openAIResult = await postChatGPTMessage(prompt);
+    const messages = await getChatHistory(channel);
+    const openAIResult = await sendChatGPTRequest(messages);
 
     await postSlackMessage(channel, openAIResult);
 }
