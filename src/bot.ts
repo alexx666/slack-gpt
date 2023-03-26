@@ -1,5 +1,5 @@
 import { cacheRequest, hashRequestBody, isCached } from "./cache";
-import { sendChatGPTRequest } from "./openapi";
+import { sendChatGPTRequest } from "./openai";
 import { getChatHistory, postSlackMessage } from "./slack";
 
 export async function handleRequest(slackMessage: any) {
