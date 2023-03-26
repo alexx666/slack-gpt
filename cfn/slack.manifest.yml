@@ -1,0 +1,25 @@
+display_information:
+  name: SlackGPT
+  description: Chat GPT Slack Bot
+  background_color: "#000000"
+features:
+  bot_user:
+    display_name: SlackGPT
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - channels:history
+      - channels:read
+      - chat:write
+      - users:read
+settings:
+  event_subscriptions:
+    # replace with your slack request url (see CloudFormation outputs after deployment)
+    request_url: https://id.execute-api.region.amazonaws.com/v1/messages
+    bot_events:
+      - app_mention
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

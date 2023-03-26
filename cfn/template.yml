@@ -119,6 +119,6 @@ Resources:
           Value: !Ref Environment
 
 Outputs:
-  ClikcableAPIUrl:
-    Description: API url
-    Value: !Sub https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${Version}
+  SlackRequestUrl:
+    Description: Slack Request URL
+    Value: !Sub https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${Version}/messages
