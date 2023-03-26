@@ -1,12 +1,12 @@
 import { WebClient } from "@slack/web-api";
-import { ChatCompletionRequestMessage } from "openai";
+import { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum } from "openai";
 
 const slack = new WebClient(process.env.SLACK_TOKEN);
 
 export async function getChatHistory(channel: string) {
     console.debug("Fetching bot info and chat history...");
 
-    const botInfo = await slack.bots.info();
+    const botInfo = await slack.auth.test();
 
     // gets only latest
     const history = await slack.conversations.history({ channel });
@@ -15,7 +15,9 @@ export async function getChatHistory(channel: string) {
 
     // Maps to gpt message format
     const messages: ChatCompletionRequestMessage[] = sortedMessages.map(msg => ({
-        role: msg.bot_id === botInfo.bot?.id ? "assistant" : "user",
+        role: msg.bot_id === botInfo.bot_id
+            ? ChatCompletionRequestMessageRoleEnum.Assistant
+            : ChatCompletionRequestMessageRoleEnum.User,
         content: String(msg.text)
     }));
 

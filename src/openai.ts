@@ -1,4 +1,4 @@
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
+import { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum, Configuration, OpenAIApi } from "openai";
 
 const openAIConfig = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -14,7 +14,7 @@ export async function sendChatGPTRequest(prompts: ChatCompletionRequestMessage[]
     const completion = await openai.createChatCompletion({
         model, messages: [
             {
-                role: "system",
+                role: ChatCompletionRequestMessageRoleEnum.System,
                 content: systemContent
             },
             ...prompts,
