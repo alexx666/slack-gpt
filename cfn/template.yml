@@ -2,23 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Transform: AWS::Serverless-2016-10-31
 
-Globals:
-  Function:
-    MemorySize: 2048
-    Runtime: nodejs18.x
-    Handler: index.handler
-    Environment:
-      Variables:
-        SLACK_TOKEN: !Ref SlackToken
-        OPENAI_API_KEY: !Ref OpenAIToken
-        OPENAI_MODEL: !Ref OpenAIModel
-        OPENAI_SYSTEM_CONTENT: !Ref OpenAISystemContent
-        DYNAMO_REQUEST_CACHE_TABLE: !Ref RequestCache
-        # NODE_OPTIONS: --enable-source-maps
-    Tags:
-      Project: !Ref Project
-      Environment: !Ref Environment
-
 Description: SlackGPT
 
 # Metadata:
@@ -96,8 +79,22 @@ Resources:
       FunctionName: !Sub ${AWS::StackName}-handler
       Timeout: 30
       CodeUri: src/
+      MemorySize: 2048
+      Runtime: nodejs18.x
+      Handler: lambda.handler
       Policies:
         - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          SLACK_TOKEN: !Ref SlackToken
+          OPENAI_API_KEY: !Ref OpenAIToken
+          OPENAI_MODEL: !Ref OpenAIModel
+          OPENAI_SYSTEM_CONTENT: !Ref OpenAISystemContent
+          DYNAMO_REQUEST_CACHE_TABLE: !Ref RequestCache
+          # NODE_OPTIONS: --enable-source-maps
+    Tags:
+      Project: !Ref Project
+      Environment: !Ref Environment
     Metadata:
       BuildMethod: esbuild
     Events:
