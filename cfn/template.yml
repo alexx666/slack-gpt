@@ -73,39 +73,78 @@ Resources:
         Project: !Ref Project
         Environment: !Ref Environment
 
-  SlackGPTHandler:
+  ApiRequestHandler:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-handler
+      FunctionName: !Sub ${AWS::StackName}-request
       Timeout: 30
       CodeUri: src/
       MemorySize: 2048
       Runtime: nodejs18.x
-      Handler: lambda.handler
+      Handler: api-lambda.handler
       Policies:
         - AmazonDynamoDBFullAccess
+        - AmazonSQSFullAccess
+      Environment:
+        Variables:
+          DYNAMO_REQUEST_CACHE_TABLE: !Ref RequestCache
+          SQS_QUEUE_URL: !Ref SlackGPTQueue
+          # NODE_OPTIONS: --enable-source-maps
+      Events:
+        PostMessages:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /messages
+            Method: POST
+            PayloadFormatVersion: "2.0"
+            TimeoutInMillis: 29000
+      Tags:
+        Project: !Ref Project
+        Environment: !Ref Environment
+    Metadata:
+      BuildMethod: esbuild
+
+  ApiRequestHandlerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ApiRequestHandler}
+      RetentionInDays: 14
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Environment
+          Value: !Ref Environment
+
+  SlackGPTHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-handler
+      Timeout: 900
+      CodeUri: src/
+      MemorySize: 2048
+      Runtime: nodejs18.x
+      Handler: bot-lambda.handler
       Environment:
         Variables:
           SLACK_TOKEN: !Ref SlackToken
           OPENAI_API_KEY: !Ref OpenAIToken
           OPENAI_MODEL: !Ref OpenAIModel
           OPENAI_SYSTEM_CONTENT: !Ref OpenAISystemContent
-          DYNAMO_REQUEST_CACHE_TABLE: !Ref RequestCache
           # NODE_OPTIONS: --enable-source-maps
-    Tags:
-      Project: !Ref Project
-      Environment: !Ref Environment
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            BatchSize: 10
+            Enabled: true
+            MaximumBatchingWindowInSeconds: 2
+            Queue:  !GetAtt SlackGPTQueue.Arn
+      Tags:
+        Project: !Ref Project
+        Environment: !Ref Environment
     Metadata:
       BuildMethod: esbuild
-    Events:
-      PostMessages:
-        Type: HttpApi
-        Properties:
-          ApiId: !Ref Api
-          Path: /messages
-          Method: POST
-          PayloadFormatVersion: "2.0"
-          TimeoutInMillis: 29000
 
   SlackGPTHandlerLogGroup:
     Type: AWS::Logs::LogGroup
@@ -117,6 +156,34 @@ Resources:
           Value: !Ref Project
         - Key: Environment
           Value: !Ref Environment
+
+  SlackGPTQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-queue
+      VisibilityTimeout: 900
+      Tags:
+        - Key: Project
+          Value: !Ref Project
+        - Key: Environment
+          Value: !Ref Environment
+
+  SlackGPTQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Version: 2008-10-17
+        Id: PublicationPolicy
+        Statement:
+          - Sid: Allow-SendMessage
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource: "*"
+      Queues:
+        - !Ref SlackGPTQueue
 
 Outputs:
   SlackRequestUrl:

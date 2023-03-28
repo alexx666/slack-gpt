@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
-import { handleRequest } from "./bot";
+import { handleRequest } from "./api";
 
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
 
@@ -18,9 +18,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (slackMessage.challenge) return {
         statusCode: 200,
         body: slackMessage.challenge
-    }
-
-    console.debug(slackMessage);
+    };
 
     await handleRequest(slackMessage);
 
