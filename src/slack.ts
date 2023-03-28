@@ -3,10 +3,14 @@ import { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum } fr
 
 const slack = new WebClient(process.env.SLACK_TOKEN);
 
+export async function getBotId() {
+    return slack.auth.test();
+}
+
 export async function getChatHistory(channel: string) {
     console.debug("Fetching bot info and chat history...");
 
-    const botInfo = await slack.auth.test();
+    const botInfo = await getBotId();
 
     // gets only latest
     const history = await slack.conversations.history({ channel });

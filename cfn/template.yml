@@ -87,6 +87,7 @@ Resources:
         - AmazonSQSFullAccess
       Environment:
         Variables:
+          SLACK_TOKEN: !Ref SlackToken
           DYNAMO_REQUEST_CACHE_TABLE: !Ref RequestCache
           SQS_QUEUE_URL: !Ref SlackGPTQueue
           # NODE_OPTIONS: --enable-source-maps
