@@ -14,6 +14,7 @@ oauth_config:
       - channels:read
       - chat:write
       - users:read
+      - groups:history
 settings:
   event_subscriptions:
     # replace with your slack request url (see CloudFormation outputs after deployment)
