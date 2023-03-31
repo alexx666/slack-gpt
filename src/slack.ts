@@ -2,6 +2,7 @@ import { WebClient } from "@slack/web-api";
 import { ChatCompletionRequestMessage, ChatCompletionRequestMessageRoleEnum } from "openai";
 
 const slack = new WebClient(process.env.SLACK_TOKEN);
+const historyLimit = Number(process.env.SLACK_CONVERSATION_HISTORY_LIMIT);
 
 export async function getBotId() {
     return slack.auth.test();
@@ -13,7 +14,7 @@ export async function getChatHistory(channel: string) {
     const botInfo = await getBotId();
 
     // gets only latest
-    const history = await slack.conversations.history({ channel });
+    const history = await slack.conversations.history({ channel, limit: historyLimit });
 
     const sortedMessages = (history.messages ?? []).sort((m1, m2) => Number(m1.ts) - Number(m2.ts));
 
@@ -24,6 +25,8 @@ export async function getChatHistory(channel: string) {
             : ChatCompletionRequestMessageRoleEnum.User,
         content: String(msg.text)
     }));
+
+    console.debug("Fetched", messages.length, "messages");
 
     return messages;
 }

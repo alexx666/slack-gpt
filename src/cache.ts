@@ -17,6 +17,8 @@ export function hashRequestBody(body: any): string {
 }
 
 export async function isCached(requestId: string): Promise<boolean> {
+    console.debug("Checking if", requestId, "is cached...");
+
     const result = await requestCache
         .get({ TableName: cacheTable, Key: { requestId } })
         .promise();
@@ -26,6 +28,7 @@ export async function isCached(requestId: string): Promise<boolean> {
 
 export async function cacheRequest(requestId: string): Promise<void> {
     console.debug("Caching requestId:", requestId);
+    
     await requestCache.put({
         TableName: cacheTable,
         Item: {

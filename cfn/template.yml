@@ -19,6 +19,10 @@ Parameters:
   SlackToken:
     Type: String
 
+  SlackHistoryLimit:
+    Type: Number
+    Default: 10
+
   OpenAIToken:
     Type: String
 
@@ -129,6 +133,7 @@ Resources:
       Environment:
         Variables:
           SLACK_TOKEN: !Ref SlackToken
+          SLACK_CONVERSATION_HISTORY_LIMIT: !Ref SlackHistoryLimit
           OPENAI_API_KEY: !Ref OpenAIToken
           OPENAI_MODEL: !Ref OpenAIModel
           OPENAI_SYSTEM_CONTENT: !Ref OpenAISystemContent
