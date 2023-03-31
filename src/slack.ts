@@ -32,3 +32,11 @@ export async function postSlackMessage(channel: string, text: string | undefined
     console.debug("Sending message to Slack channel...");
     await slack.chat.postMessage({ channel, text });
 }
+
+export async function getChatDescription(channel: string): Promise<string | undefined> {
+    console.debug("Fetching chat info...");
+
+    const info = await slack.conversations.info({ channel });
+
+    return info.channel?.topic?.value;
+}

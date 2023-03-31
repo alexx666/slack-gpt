@@ -20,6 +20,9 @@ oauth_config:
       - groups:history
       - users:read
       - im:history
+      - groups:read
+      - im:read
+      - mpim:read
 settings:
   event_subscriptions:
     request_url: https://id.execute-api.region.amazonaws.com/v1/messages

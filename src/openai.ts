@@ -8,12 +8,16 @@ const model = String(process.env.OPENAI_MODEL);
 const openai = new OpenAIApi(openAIConfig);
 
 export async function sendChatGPTRequest(prompts: ChatCompletionRequestMessage[], systemContent?: string): Promise<string | undefined> {
-    console.debug("Sending message to ChatGPT...")
+    
+    const content = systemContent ?? String(process.env.OPENAI_SYSTEM_CONTENT);
+
+    console.debug("Sending message to ChatGPT using system content:", content);
+
     const completion = await openai.createChatCompletion({
         model, messages: [
             {
                 role: ChatCompletionRequestMessageRoleEnum.System,
-                content: systemContent ?? String(process.env.OPENAI_SYSTEM_CONTENT)
+                content
             },
             ...prompts,
         ]
