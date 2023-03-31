@@ -7,19 +7,17 @@ const openAIConfig = new Configuration({
 const model = String(process.env.OPENAI_MODEL);
 const openai = new OpenAIApi(openAIConfig);
 
-const systemContent = String(process.env.OPENAI_SYSTEM_CONTENT);
-
-export async function sendChatGPTRequest(prompts: ChatCompletionRequestMessage[]): Promise<string | undefined> {
+export async function sendChatGPTRequest(prompts: ChatCompletionRequestMessage[], systemContent?: string): Promise<string | undefined> {
     console.debug("Sending message to ChatGPT...")
     const completion = await openai.createChatCompletion({
         model, messages: [
             {
                 role: ChatCompletionRequestMessageRoleEnum.System,
-                content: systemContent
+                content: systemContent ?? String(process.env.OPENAI_SYSTEM_CONTENT)
             },
             ...prompts,
         ]
-    }, { timeout: 30000 });
+    });
 
     return completion.data.choices[0].message?.content;
 }
