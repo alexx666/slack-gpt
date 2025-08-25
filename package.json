@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build:src": "tsc -p tsconfig.json",
+    "start:agent": "node dist/main.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "sam build -t cfn/template.yml -s . --beta-features",
     "deploy": "sam deploy -g --config-env dev"
@@ -15,11 +17,15 @@
     "@types/aws-lambda": "^8.10.114",
     "aws-lambda": "^1.0.7",
     "aws-sdk": "^2.1343.0",
+    "dotenv": "^17.2.1",
     "esbuild": "^0.17.12",
     "typescript": "^5.0.2"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.4",
+    "@openai/agents": "^0.0.17",
     "@slack/web-api": "^6.8.1",
-    "openai": "^3.2.1"
+    "openai": "^3.2.1",
+    "zod": "^3.25.76"
   }
 }
