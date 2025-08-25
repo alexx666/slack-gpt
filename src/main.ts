@@ -4,13 +4,30 @@ import { config } from "dotenv";
 import { OpenAIAgent } from "./openai.agent";
 
 async function main() {
+    let running = true;
+
+    process.on('SIGINT', () => {
+        running = false;
+        console.log('\nShutting down...');
+    });
+
+    process.on('SIGTERM', () => {
+        running = false;
+        console.log('\nShutting down...');
+    });
+
+    process.on("exit", async () => {
+        await agent.disconnect();
+        console.log('Exiting...');
+    });
+
     config();
 
     const agent = new OpenAIAgent();
 
     await agent.connect();
 
-    while (true) {
+    while (running) {
         const rl = createInterface({
             input: process.stdin,
             output: process.stdout,
@@ -19,9 +36,7 @@ async function main() {
         try {
             const message = await rl.question("\nQuery: ");
 
-            if (message.toLowerCase() === "quit") break;
-
-            const response = await agent.run(message);
+            const response = await agent.send(message);
 
             console.log("\n" + response);
         } catch (e) {
@@ -30,8 +45,6 @@ async function main() {
             rl.close();
         }
     }
-
-    await agent.disconnect();
 }
 
 void main();

@@ -27,14 +27,18 @@ export class OpenAIAgent {
     }
 
     public connect() {
+        console.log('Connecting to MCP servers...');
         return Promise.all(this.agent.mcpServers.map(server => server.connect()));
     }
 
     public async disconnect() {
+        console.log('Disconnecting from MCP servers...');
         return Promise.all(this.agent.mcpServers.map(server => server.close()));
     }
 
-    public async run(message: string) {
+    public async send(message: string) {
+        console.log('Sending message to agent...');
+        
         const result = await run(this.agent, message);
 
         return result.finalOutput;
