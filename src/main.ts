@@ -4,17 +4,8 @@ import { config } from "dotenv";
 import { OpenAIAgent } from "./openai.agent";
 
 async function main() {
-    let running = true;
-
-    process.on('SIGINT', () => {
-        running = false;
-        console.log('\nShutting down...');
-    });
-
-    process.on('SIGTERM', () => {
-        running = false;
-        console.log('\nShutting down...');
-    });
+    process.on('SIGINT', () => console.log('\nShutting down...'));
+    process.on('SIGTERM', () => console.log('\nShutting down...'));
 
     process.on("exit", async () => {
         await agent.disconnect();
@@ -27,7 +18,7 @@ async function main() {
 
     await agent.connect();
 
-    while (running) {
+    while (true) {
         const rl = createInterface({
             input: process.stdin,
             output: process.stdout,
